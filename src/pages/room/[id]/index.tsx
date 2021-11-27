@@ -11,6 +11,7 @@ import {
   List,
   ListItem,
   Tooltip,
+  Link,
 } from "@mui/material";
 import { Error } from "mongoose";
 import { useRouter } from "next/router";
@@ -22,9 +23,10 @@ import { useSubscription } from "../../../lib/use-subscription";
 import type { Player, Room } from "../../../models/room";
 import SwipeableViews from "react-swipeable-views";
 import { InlineTextField } from "../../../components/inline-text-field";
-import { ContentCopy, Star } from "@mui/icons-material";
+import { ArrowBackIos, ContentCopy, Star } from "@mui/icons-material";
 import copy from "copy-to-clipboard";
 import { useSnackbar } from "notistack";
+import { usePageTransition } from "../../_app";
 
 const RoomIndexStatic = ({ room }: { room: Room }) => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -274,53 +276,69 @@ const RoomIndexLoader = () => {
 
   const [error, setError] = useState<Error | null>(null);
 
+  const pageTransition = usePageTransition();
 
   return (
     <Layout centered>
-        <Paper
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            p: 1,
-            minHeight: 200,
-            minWidth: 300,
-          }}
-        >
-          <Fade in={!room.data && !room.error} unmountOnExit appear={false}>
-            <Box
-              sx={{
-                position: "absolute",
-                width: 1,
-                height: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 1,
-              }}
-            >
-              <Typography>Loading room...</Typography>
-              <CircularProgress />
-            </Box>
-          </Fade>
-          <Fade in={!!room.data && !!me.data}>
-            <Box>
-              <RoomIndex
-                id={id as string}
-                room={room.data?.room}
-                setError={setError}
-                me={me.data?.me}
-              />
-            </Box>
-          </Fade>
-          <Collapse in={!!(error || room.error)}>
-            <Alert severity="error">
-              {(error ?? room.error)?.name}: {(error ?? room.error)?.message}
-            </Alert>
-          </Collapse>
-        </Paper>
+      <Paper
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 1,
+          minHeight: 200,
+          minWidth: 300,
+          position: "relative",
+        }}
+      >
+        <Box sx={{ position: "absolute", top: 2, left: 2 }}>
+          <Link
+            href="/"
+            onClick={(e) => {
+              pageTransition("/");
+              e.preventDefault();
+            }}
+          >
+            <ArrowBackIos
+              sx={{ fontSize: 14, position: "relative", top: 2, left: 3 }}
+            />
+            Leave
+          </Link>
+        </Box>
+        <Fade in={!room.data && !room.error} unmountOnExit appear={false}>
+          <Box
+            sx={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+            }}
+          >
+            <Typography>Loading room...</Typography>
+            <CircularProgress />
+          </Box>
+        </Fade>
+        <Fade in={!!room.data && !!me.data}>
+          <Box>
+            <RoomIndex
+              id={id as string}
+              room={room.data?.room}
+              setError={setError}
+              me={me.data?.me}
+            />
+          </Box>
+        </Fade>
+        <Collapse in={!!(error || room.error)}>
+          <Alert severity="error">
+            {(error ?? room.error)?.name}: {(error ?? room.error)?.message}
+          </Alert>
+        </Collapse>
+      </Paper>
     </Layout>
   );
 };

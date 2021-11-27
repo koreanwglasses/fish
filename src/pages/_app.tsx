@@ -10,8 +10,15 @@ import React, {
   useMemo,
 } from "react";
 import { post } from "../lib/fetchers";
-import { createTheme, Fade, ThemeProvider } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  createTheme,
+  Fade,
+  ThemeProvider,
+} from "@mui/material";
 import { SnackbarProvider } from "notistack";
+import { useRouter } from "next/router";
 
 const theme = createTheme({
   palette: {
@@ -26,24 +33,26 @@ const theme = createTheme({
 });
 
 const PageContext = createContext<{
-  setNextTransition?: (transition: {
-    nextURL?: string;
-    timeout?: number;
-  }) => void;
+  setNextTransition?: (transition: { nextURL?: string }) => void;
 }>({});
 
 export const usePageTransition = () => {
   const { setNextTransition } = useContext(PageContext);
+  const router = useRouter();
 
   const cb = useCallback(
-    (url: string, timeout?: number) => {
+    async (url: string, timeout = 200) => {
       if (!setNextTransition) {
-        window.location.href = url;
+        router.push(url);
         return;
       }
-      setNextTransition({ nextURL: url, timeout });
+      router.prefetch(url);
+      setNextTransition({ nextURL: url });
+      await new Promise((res) => setTimeout(res, timeout));
+      await router.push(url);
+      setNextTransition({});
     },
-    [setNextTransition]
+    [router, setNextTransition]
   );
   return cb;
 };
@@ -54,18 +63,9 @@ export const SocketIOContext = createContext<{
 }>({});
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const [{ nextURL, timeout }, setNextTransition] = useState<{
+  const [{ nextURL }, setNextTransition] = useState<{
     nextURL?: string;
-    timeout?: number;
   }>({});
-
-  useEffect(() => {
-    if (nextURL) {
-      setTimeout(() => {
-        window.location.href = nextURL;
-      }, timeout ?? 300);
-    }
-  }, [nextURL, timeout]);
 
   const pageContext = useMemo(() => ({ setNextTransition }), []);
 
@@ -103,6 +103,21 @@ function MyApp({ Component, pageProps }: AppProps) {
       <PageContext.Provider value={pageContext}>
         <SocketIOContext.Provider value={context}>
           <SnackbarProvider maxSnack={3}>
+            <Fade in={!!nextURL}>
+              <Box
+                sx={{
+                  width: "100vw",
+                  height: "100vh",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "column",
+                  position: "absolute",
+                }}
+              >
+                <CircularProgress sx={{ color: "white", opacity: 0.5 }} />
+              </Box>
+            </Fade>
             <Fade in={!nextURL}>
               <span>
                 <Component {...pageProps} />
