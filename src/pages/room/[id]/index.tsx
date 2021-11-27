@@ -15,13 +15,13 @@ import {
 import { Error } from "mongoose";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/layout";
-import { post } from "../../lib/fetchers";
-import { useSocketIndex } from "../../lib/use-socket";
-import { useSubscription } from "../../lib/use-subscription";
-import type { Player, Room } from "../../models/room";
+import Layout from "../../../components/layout";
+import { post } from "../../../lib/fetchers";
+import { useSocketIndex } from "../../../lib/use-socket";
+import { useSubscription } from "../../../lib/use-subscription";
+import type { Player, Room } from "../../../models/room";
 import SwipeableViews from "react-swipeable-views";
-import { InlineTextField } from "../../components/inline-text-field";
+import { InlineTextField } from "../../../components/inline-text-field";
 import { ContentCopy, Star } from "@mui/icons-material";
 import copy from "copy-to-clipboard";
 import { useSnackbar } from "notistack";
@@ -47,7 +47,7 @@ const RoomIndexStatic = ({ room }: { room: Room }) => {
           }
         }}
       >
-        <ContentCopy fontSize="small" sx={{mr: 0.5}}/>
+        <ContentCopy fontSize="small" sx={{ mr: 0.5 }} />
         Copy Invite Link
       </Button>
       <Typography variant="overline">
@@ -274,52 +274,53 @@ const RoomIndexLoader = () => {
 
   const [error, setError] = useState<Error | null>(null);
 
+
   return (
     <Layout centered>
-      <Paper
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 1,
-          minHeight: 200,
-          minWidth: 300,
-        }}
-      >
-        <Fade in={!room.data && !room.error} unmountOnExit appear={false}>
-          <Box
-            sx={{
-              position: "absolute",
-              width: 1,
-              height: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 1,
-            }}
-          >
-            <Typography>Loading room...</Typography>
-            <CircularProgress />
-          </Box>
-        </Fade>
-        <Fade in={!!room.data && !!me.data}>
-          <Box>
-            <RoomIndex
-              id={id as string}
-              room={room.data?.room}
-              setError={setError}
-              me={me.data?.me}
-            />
-          </Box>
-        </Fade>
-        <Collapse in={!!(error || room.error)}>
-          <Alert severity="error">
-            {(error ?? room.error)?.name}: {(error ?? room.error)?.message}
-          </Alert>
-        </Collapse>
-      </Paper>
+        <Paper
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 1,
+            minHeight: 200,
+            minWidth: 300,
+          }}
+        >
+          <Fade in={!room.data && !room.error} unmountOnExit appear={false}>
+            <Box
+              sx={{
+                position: "absolute",
+                width: 1,
+                height: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+              }}
+            >
+              <Typography>Loading room...</Typography>
+              <CircularProgress />
+            </Box>
+          </Fade>
+          <Fade in={!!room.data && !!me.data}>
+            <Box>
+              <RoomIndex
+                id={id as string}
+                room={room.data?.room}
+                setError={setError}
+                me={me.data?.me}
+              />
+            </Box>
+          </Fade>
+          <Collapse in={!!(error || room.error)}>
+            <Alert severity="error">
+              {(error ?? room.error)?.name}: {(error ?? room.error)?.message}
+            </Alert>
+          </Collapse>
+        </Paper>
     </Layout>
   );
 };

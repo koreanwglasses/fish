@@ -17,11 +17,14 @@ const CenteredLayout = ({ children }: React.PropsWithChildren<{}>) => (
   </Box>
 );
 
+
 const Layout = ({
   children,
   centered,
 }: React.PropsWithChildren<{ centered: true }>) => {
-  return <CenteredLayout>{children}</CenteredLayout>;
+  return (
+          <CenteredLayout>{children}</CenteredLayout>
+  );
 };
 
 export default Layout;

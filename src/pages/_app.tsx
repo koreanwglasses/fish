@@ -1,10 +1,17 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { io, Socket } from "socket.io-client";
-import { useEffect, useState, createContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+} from "react";
 import { post } from "../lib/fetchers";
-import { createTheme, ThemeProvider } from "@mui/material";
-import { SnackbarProvider } from 'notistack';
+import { createTheme, Fade, ThemeProvider } from "@mui/material";
+import { SnackbarProvider } from "notistack";
 
 const theme = createTheme({
   palette: {
@@ -18,12 +25,50 @@ const theme = createTheme({
   },
 });
 
+const PageContext = createContext<{
+  setNextTransition?: (transition: {
+    nextURL?: string;
+    timeout?: number;
+  }) => void;
+}>({});
+
+export const usePageTransition = () => {
+  const { setNextTransition } = useContext(PageContext);
+
+  const cb = useCallback(
+    (url: string, timeout?: number) => {
+      if (!setNextTransition) {
+        window.location.href = url;
+        return;
+      }
+      setNextTransition({ nextURL: url, timeout });
+    },
+    [setNextTransition]
+  );
+  return cb;
+};
+
 export const SocketIOContext = createContext<{
   socket?: Socket;
   socketIndex?: number;
 }>({});
 
 function MyApp({ Component, pageProps }: AppProps) {
+  const [{ nextURL, timeout }, setNextTransition] = useState<{
+    nextURL?: string;
+    timeout?: number;
+  }>({});
+
+  useEffect(() => {
+    if (nextURL) {
+      setTimeout(() => {
+        window.location.href = nextURL;
+      }, timeout ?? 300);
+    }
+  }, [nextURL, timeout]);
+
+  const pageContext = useMemo(() => ({ setNextTransition }), []);
+
   // We only want one socket per client instance, so we
   // provide it at the root component level.
 
@@ -54,13 +99,19 @@ function MyApp({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <SocketIOContext.Provider value={context}>
-      <ThemeProvider theme={theme}>
-        <SnackbarProvider maxSnack={3}>
-        <Component {...pageProps} />
-        </SnackbarProvider>
-      </ThemeProvider>
-    </SocketIOContext.Provider>
+    <ThemeProvider theme={theme}>
+      <PageContext.Provider value={pageContext}>
+        <SocketIOContext.Provider value={context}>
+          <SnackbarProvider maxSnack={3}>
+            <Fade in={!nextURL}>
+              <span>
+                <Component {...pageProps} />
+              </span>
+            </Fade>
+          </SnackbarProvider>
+        </SocketIOContext.Provider>
+      </PageContext.Provider>
+    </ThemeProvider>
   );
 }
 
